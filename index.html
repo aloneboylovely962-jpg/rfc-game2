@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RFC Mobile Challenge</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#111;
+    color:white;
+    text-align:center;
+    overflow:hidden;
+}
+
+h1{
+    background:#ffcc00;
+    color:black;
+    padding:12px;
+    font-size:18px;
+}
+
+#topBar{
+    display:flex;
+    justify-content:space-around;
+    font-size:14px;
+}
+
+#gameArea{
+    position:relative;
+    width:100%;
+    height:60vh;
+    border-top:2px solid #ffcc00;
+}
+
+.food{
+    position:absolute;
+    width:70px;
+    height:70px;
+    cursor:pointer;
+}
+
+.burger{
+    background:linear-gradient(#c68642 30%, #3cb043 30%, #3cb043 40%, #8b0000 40%, #8b0000 60%, #c68642 60%);
+    border-radius:50%;
+}
+
+.pizza{
+    background:radial-gradient(circle,#f4a460 60%, #d2691e 60%);
+    border-radius:50%;
+}
+
+.drink{
+    background:#00bfff;
+    border-radius:15px;
+}
+
+button{
+    padding:8px 15px;
+    font-size:14px;
+    background:#ffcc00;
+    border:none;
+    margin-top:5px;
+}
+
+input{
+    padding:8px;
+    font-size:14px;
+    width:70%;
+    margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<h1>🍔 RFC REAL FAST FOOD CAFE 🍕</h1>
+
+<div id="startScreen">
+    <h3>Enter Your Name</h3>
+    <input type="text" id="username" placeholder="Your Name">
+    <br>
+    <button onclick="startGame()">Start Game</button>
+    <h4 id="highScoreDisplay"></h4>
+</div>
+
+<div id="gameUI" style="display:none;">
+    <div id="topBar">
+        <div id="player"></div>
+        <div id="score"></div>
+        <div id="level"></div>
+        <div id="lives"></div>
+        <div id="timer"></div>
+    </div>
+    <div id="order"></div>
+    <div id="gameArea"></div>
+</div>
+
+<script>
+let foods=["burger","pizza","drink"];
+let currentOrder="";
+let score=0;
+let level=1;
+let lives=3;
+let time=45;
+let speed=1800;
+let timerInterval;
+let spawnInterval;
+let playerName="";
+
+window.onload=function(){
+let high=localStorage.getItem("rfcHighScore");
+if(high){
+document.getElementById("highScoreDisplay").innerHTML="🏆 High Score: "+high;
+}
+}
+
+function startGame(){
+playerName=document.getElementById("username").value;
+if(playerName===""){
+alert("Enter Name First!");
+return;
+}
+
+document.getElementById("startScreen").style.display="none";
+document.getElementById("gameUI").style.display="block";
+
+score=0; level=1; lives=3; time=45; speed=1800;
+
+updateUI();
+nextOrder();
+
+timerInterval=setInterval(updateTimer,1000);
+spawnInterval=setInterval(spawnFood,speed);
+}
+
+function updateUI(){
+document.getElementById("player").innerHTML="👤 "+playerName;
+document.getElementById("score").innerHTML="Score: "+score;
+document.getElementById("level").innerHTML="Lvl: "+level;
+document.getElementById("lives").innerHTML="❤️ "+lives;
+document.getElementById("timer").innerHTML="⏱ "+time;
+}
+
+function nextOrder(){
+currentOrder=foods[Math.floor(Math.random()*foods.length)];
+document.getElementById("order").innerHTML="Serve: "+currentOrder.toUpperCase();
+}
+
+function spawnFood(){
+let food=document.createElement("div");
+let type=foods[Math.floor(Math.random()*foods.length)];
+food.classList.add("food",type);
+
+food.style.left=Math.random()*85+"%";
+food.style.top=Math.random()*50+"%";
+
+food.onclick=function(){
+if(type===currentOrder){
+score+=10;
+if(score%40===0){
+level++;
+speed-=150;
+if(speed<600) speed=600;
+clearInterval(spawnInterval);
+spawnInterval=setInterval(spawnFood,speed);
+}
+}else{
+lives--;
+}
+updateUI();
+nextOrder();
+food.remove();
+checkGameOver();
+}
+
+setTimeout(()=>{
+if(food.parentNode){
+food.remove();
+lives--;
+updateUI();
+checkGameOver();
+}
+},2500);
+
+document.getElementById("gameArea").appendChild(food);
+}
+
+function updateTimer(){
+time--;
+updateUI();
+if(time<=0){
+endGame();
+}
+}
+
+function checkGameOver(){
+if(lives<=0){
+endGame();
+}
+}
+
+function endGame(){
+clearInterval(timerInterval);
+clearInterval(spawnInterval);
+
+let high=localStorage.getItem("rfcHighScore");
+if(!high || score>high){
+localStorage.setItem("rfcHighScore",score);
+}
+
+alert("Game Over "+playerName+"! Final Score: "+score);
+location.reload();
+}
+</script>
+
+</body>
+</html>
